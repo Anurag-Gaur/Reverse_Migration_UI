@@ -1,0 +1,723 @@
+metadata:
+  key: p2p_ofi
+  name: P2P_Ofi
+  knowledgeModelKey: p2p-knowledge-model
+  advancedFiltersSettings:
+    eventLogs: []
+    processFilter:
+      active: false
+    attributeFilter:
+      active: false
+components:
+  - id: kpi-card-po-count-c001
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-po-count.attr-po-count
+      dataSources:
+        - id: ds-po-count
+          attributes:
+            - id: attr-po-count
+              pql: |
+                COUNT(DISTINCT "T1_PROCUREMENT_EVENTS"."PO_NUMBER")
+              unit: ""
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              displayName: Total PO Count
+              shortDisplayName: POs
+          description: ""
+          displayName: Total PO Count
+          shortDisplayName: ""
+  - id: kpi-card-cycle-time-c002
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-cycle-time.attr-cycle-time
+        relatedKpis:
+          - id: related-cycle-benchmark
+            kpi: ds-cycle-benchmark.attr-benchmark
+            order: 100
+      dataSources:
+        - id: ds-cycle-benchmark
+          attributes:
+            - id: attr-benchmark
+              pql: |
+                30
+              unit: " days"
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              displayName: Target Cycle Time
+              shortDisplayName: Target
+          description: ""
+          displayName: Benchmark
+          shortDisplayName: ""
+        - id: ds-cycle-time
+          attributes:
+            - id: attr-cycle-time
+              pql: "AVG(\"T1_PROCUREMENT_EVENTS\".\"KPI_PO_CYCLE_TIME_DAYS\")*-1\r
+
+                \n"
+              unit: " days"
+              format: ",.1f"
+              columnType: float
+              aggregation: true
+              description: ""
+              displayName: Avg PO Cycle Time
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-cycle-time
+          shortDisplayName: ""
+  - id: kpi-card-3wm-c003
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-3wm.attr-3wm
+      dataSources:
+        - id: ds-3wm
+          attributes:
+            - id: attr-3wm
+              pql: |
+                SUM(
+                  CASE WHEN "T1_PROCUREMENT_EVENTS"."KPI_THREE_WAY_MATCH" = 1
+                  THEN 1 ELSE 0 END
+                )
+                /
+                COUNT(DISTINCT "T1_PROCUREMENT_EVENTS"."PO_NUMBER") * 100
+              unit: "%"
+              format: ",.1f"
+              columnType: float
+              aggregation: true
+              displayName: 3-Way Match Rate
+              shortDisplayName: 3WM
+          description: ""
+          displayName: 3-Way Match Rate
+          shortDisplayName: ""
+  - id: kpi-card-otd-c004
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-otd.attr-otd
+      dataSources:
+        - id: ds-otd
+          attributes:
+            - id: attr-otd
+              pql: |
+                SUM(
+                  CASE WHEN "T1_PROCUREMENT_EVENTS"."KPI_ON_TIME_DELIVERY" = 1
+                  THEN 1 ELSE 0 END
+                )
+                /
+                COUNT(DISTINCT "T1_PROCUREMENT_EVENTS"."PO_NUMBER") * 100
+              unit: "%"
+              format: ",.1f"
+              columnType: float
+              aggregation: true
+              displayName: On-Time Delivery Rate
+              shortDisplayName: OTD
+          description: ""
+          displayName: On-Time Delivery Rate
+          shortDisplayName: ""
+  - id: text-box-procurement-header
+    type: text-box
+    filters: []
+    settings:
+      content: >
+        <h2 class="ql-align-center"><strong>Procurement</strong></h2> <h5
+        class="ql-align-center">Purchase Order lifecycle from requisition
+        through goods receipt.</h5>
+  - id: kpi-card-procurement-value-c005
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-proc-value.attr-net-value
+        relatedKpis:
+          - id: related-gr-amount
+            kpi: ds-gr-amount.attr-gr-amount
+            order: 100
+      dataSources:
+        - id: ds-proc-value
+          attributes:
+            - id: attr-net-value
+              pql: |
+                SUM("T1_PROCUREMENT_EVENTS"."NET_VALUE")
+              unit: ""
+              format: $,.3~s
+              columnType: float
+              aggregation: true
+              displayName: Total Net PO Value
+              shortDisplayName: PO Value
+          description: ""
+          displayName: Total Procurement Value
+          shortDisplayName: ""
+        - id: ds-gr-amount
+          attributes:
+            - id: attr-gr-amount
+              pql: |
+                SUM("T1_PROCUREMENT_EVENTS"."GR_AMOUNT")
+              unit: ""
+              format: $,.3~s
+              columnType: float
+              aggregation: true
+              displayName: Total GR Amount
+              shortDisplayName: GR Amt
+          description: ""
+          displayName: Total GR Amount
+          shortDisplayName: ""
+  - id: line-chart-po-trend-c006
+    type: line-chart
+    filters: []
+    settings:
+      name: PO Volume & Value Over Time
+      visuals:
+        - id: visual-po-count
+          mark:
+            type: line
+            orientation: vertical
+          order: 100
+          encodings:
+            x:
+              field:
+                - attr-po-month
+            y:
+              field: attr-po-count-trend
+        - id: visual-net-value
+          mark:
+            type: line
+            orientation: vertical
+          order: 200
+          encodings:
+            x:
+              field:
+                - attr-po-month
+            y:
+              field: attr-net-value-trend
+      dataSources:
+        - id: ds-po-trend
+          attributes:
+            - id: attr-po-month
+              pql: |
+                ROUND_MONTH("T1_PROCUREMENT_EVENTS"."PO_CREATION_DATE")
+              format: "%Y-%m-%d"
+              columnType: date
+              aggregation: false
+              displayName: PO Creation Month
+              shortDisplayName: ""
+            - id: attr-po-count-trend
+              pql: |
+                COUNT(DISTINCT "T1_PROCUREMENT_EVENTS"."PO_NUMBER")
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              displayName: PO Count
+              shortDisplayName: ""
+            - id: attr-net-value-trend
+              pql: |
+                SUM("T1_PROCUREMENT_EVENTS"."NET_VALUE")
+              format: $,.3~s
+              columnType: float
+              aggregation: true
+              displayName: Net Value
+              shortDisplayName: ""
+          description: ""
+          displayName: PO Trend
+          shortDisplayName: ""
+      interactions:
+        scrolling: false
+  - id: text-box-finance-header
+    type: text-box
+    filters: []
+    settings:
+      content: >
+        <h2 class="ql-align-center"><strong>Finance &amp; Invoice</strong></h2>
+        <h5 class="ql-align-center">Invoice processing and payment efficiency.
+        Late payments increase vendor relationship risk.</h5>
+  - id: kpi-card-days-to-pay-c007
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-dtp.attr-dtp
+      dataSources:
+        - id: ds-dtp
+          attributes:
+            - id: attr-dtp
+              pql: |
+                AVG("T2_FINANCE_EVENTS"."KPI_DAYS_TO_PAY")*-1
+              unit: " days"
+              format: ",.0f"
+              columnType: float
+              aggregation: true
+              description: ""
+              displayName: Avg Days to Pay
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-dtp
+          shortDisplayName: ""
+  - id: kpi-card-open-invoices-c008
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-open-inv.attr-open-inv
+      dataSources:
+        - id: ds-open-inv
+          attributes:
+            - id: attr-open-inv
+              pql: |
+                COUNT(
+                  DISTINCT CASE
+                    WHEN "T2_FINANCE_EVENTS"."CLEARING_DATE" IS NULL
+                    THEN "T2_FINANCE_EVENTS"."INVOICE_DOC_NUMBER"
+                    ELSE NULL
+                  END
+                )
+              unit: ""
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              description: ""
+              displayName: Open Invoices
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-open-inv
+          shortDisplayName: ""
+  - id: pie-chart-payment-method-c009
+    type: pie-chart
+    filters: []
+    settings:
+      kpi: attr-invoice-count
+      name: Invoice Distribution by Payment Method
+      category:
+        - attr-payment-method
+      colorRule: PRIMARY
+      dataSources:
+        - id: ds-pie
+          attributes:
+            - id: attr-payment-method
+              pql: |
+                "T2_FINANCE_EVENTS"."PAYMENT_METHOD"
+              unit: ""
+              format: ""
+              columnType: float
+              aggregation: false
+              description: ""
+              displayName: Payment Method
+              shortDisplayName: ""
+            - id: attr-invoice-count
+              pql: |
+                COUNT(DISTINCT "T2_FINANCE_EVENTS"."INVOICE_DOC_NUMBER")
+              unit: ""
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              description: ""
+              displayName: Invoice Count
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-pie
+          shortDisplayName: ""
+      categoryLimit: 5
+      additionalKpis: []
+  - id: text-box-vendor-header
+    type: text-box
+    filters: []
+    settings:
+      content: >
+        <h2 class="ql-align-center"><strong>Vendor Performance</strong></h2> <h5
+        class="ql-align-center">Vendor on-time delivery and spend
+        concentration.</h5>
+  - id: kpi-card-vendor-spend-c010
+    type: kpi-card
+    filters: []
+    settings:
+      data:
+        kpi: ds-vendor-spend.attr-spend
+        relatedKpis:
+          - id: related-late-delivery
+            kpi: ds-late-del.attr-late-del
+            order: 100
+      dataSources:
+        - id: ds-vendor-spend
+          attributes:
+            - id: attr-spend
+              pql: |
+                SUM("T1_PROCUREMENT_EVENTS"."NET_VALUE")
+              unit: ""
+              format: $,.3~s
+              columnType: float
+              aggregation: true
+              displayName: Total Vendor Spend
+              shortDisplayName: Spend
+          description: ""
+          displayName: Total Vendor Spend
+          shortDisplayName: ""
+        - id: ds-late-del
+          attributes:
+            - id: attr-late-del
+              pql: |
+                COUNT(
+                  DISTINCT CASE
+                    WHEN "T1_PROCUREMENT_EVENTS"."IS_LATE_DELIVERY" = 1
+                    THEN "T1_PROCUREMENT_EVENTS"."PO_NUMBER"
+                    ELSE NULL
+                  END
+                )
+              unit: ""
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              description: ""
+              displayName: Late Deliveries
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-late-del
+          shortDisplayName: ""
+  - id: line-chart-otd-trend-c011
+    type: line-chart
+    filters: []
+    settings:
+      name: On-Time Delivery Trend by Month
+      visuals:
+        - id: visual-otd-rate
+          mark:
+            type: line
+            orientation: vertical
+          order: 100
+          encodings:
+            x:
+              field:
+                - attr-gr-month
+            y:
+              field: attr-otd-rate-trend
+        - id: visual-late-count
+          mark:
+            type: line
+            orientation: vertical
+          order: 200
+          encodings:
+            x:
+              field:
+                - attr-gr-month
+            y:
+              field: attr-late-count-trend
+      dataSources:
+        - id: ds-otd-trend
+          attributes:
+            - id: attr-gr-month
+              pql: |
+                ROUND_MONTH("T1_PROCUREMENT_EVENTS"."GR_POSTING_DATE")
+              unit: ""
+              format: "%Y-%m-%d"
+              columnType: date
+              aggregation: false
+              description: ""
+              displayName: GR Month
+              shortDisplayName: ""
+            - id: attr-otd-rate-trend
+              pql: |
+                COUNT(
+                  DISTINCT CASE
+                    WHEN "T1_PROCUREMENT_EVENTS"."KPI_ON_TIME_DELIVERY" = 1
+                    THEN "T1_PROCUREMENT_EVENTS"."PO_NUMBER"
+                    ELSE NULL
+                  END
+                )
+                /
+                COUNT(DISTINCT "T1_PROCUREMENT_EVENTS"."PO_NUMBER") * 100
+              unit: ""
+              format: ",.1f"
+              columnType: float
+              aggregation: true
+              description: ""
+              displayName: OTD Rate (%)
+              shortDisplayName: ""
+            - id: attr-late-count-trend
+              pql: |
+                COUNT(
+                  DISTINCT CASE
+                    WHEN "T1_PROCUREMENT_EVENTS"."IS_LATE_DELIVERY" = 1
+                    THEN "T1_PROCUREMENT_EVENTS"."PO_NUMBER"
+                    ELSE NULL
+                  END
+                )
+              unit: ""
+              format: ",.0f"
+              columnType: int
+              aggregation: true
+              description: ""
+              displayName: Late PO Count
+              shortDisplayName: ""
+          description: ""
+          displayName: ds-otd-trend
+          shortDisplayName: ""
+      interactions:
+        scrolling: false
+  - id: table-procurement-detail-c012
+    type: table
+    filters: []
+    settings:
+      data:
+        columns:
+          - id: col-po-number
+            field: attr-tbl-po-number
+            order: 100
+          - id: col-vendor-name
+            field: attr-tbl-vendor-name
+            order: 200
+          - id: col-material-desc
+            field: attr-tbl-material-desc
+            order: 300
+          - id: col-po-creation
+            field: attr-tbl-po-creation
+            order: 400
+          - id: col-gr-posting
+            field: attr-tbl-gr-posting
+            order: 500
+          - id: col-net-value
+            field: attr-tbl-net-value
+            order: 600
+          - id: col-cycle-time
+            field: attr-tbl-cycle-time
+            order: 700
+          - id: col-3wm
+            field: attr-tbl-3wm
+            order: 800
+          - id: col-otd
+            field: attr-tbl-otd
+            order: 900
+        distinct: false
+        displayLimit: 50
+      name: Purchase Order Detail
+      dataSources:
+        - id: ds-proc-table
+          filters: []
+          attributes:
+            - id: attr-tbl-po-number
+              pql: |
+                "T1_PROCUREMENT_EVENTS"."PO_NUMBER"
+              columnType: string
+              aggregation: false
+              displayName: PO Number
+              shortDisplayName: ""
+            - id: attr-tbl-vendor-name
+              pql: |
+                "T3_VENDOR_MASTER"."VENDOR_NAME"
+              columnType: string
+              aggregation: false
+              displayName: Vendor Name
+              shortDisplayName: ""
+            - id: attr-tbl-material-desc
+              pql: |
+                "T4_MATERIAL_MASTER"."MATERIAL_DESC_SHORT"
+              columnType: string
+              aggregation: false
+              displayName: Material
+              shortDisplayName: ""
+            - id: attr-tbl-po-creation
+              pql: |
+                "T1_PROCUREMENT_EVENTS"."PO_CREATION_DATE"
+              format: "%Y-%m-%d"
+              columnType: date
+              aggregation: false
+              displayName: PO Creation Date
+              shortDisplayName: ""
+            - id: attr-tbl-gr-posting
+              pql: |
+                "T1_PROCUREMENT_EVENTS"."GR_POSTING_DATE"
+              format: "%Y-%m-%d"
+              columnType: date
+              aggregation: false
+              displayName: GR Posting Date
+              shortDisplayName: ""
+            - id: attr-tbl-net-value
+              pql: |
+                "T1_PROCUREMENT_EVENTS"."NET_VALUE"
+              format: $,.2f
+              columnType: float
+              aggregation: false
+              displayName: Net Value
+              shortDisplayName: ""
+            - id: attr-tbl-cycle-time
+              pql: |
+                "T1_PROCUREMENT_EVENTS"."KPI_PO_CYCLE_TIME_DAYS"
+              format: ",.1f"
+              columnType: float
+              aggregation: false
+              displayName: Cycle Time (days)
+              shortDisplayName: ""
+            - id: attr-tbl-3wm
+              pql: |
+                CASE
+                  WHEN "T1_PROCUREMENT_EVENTS"."KPI_THREE_WAY_MATCH" = 1
+                  THEN 'Yes' ELSE 'No'
+                END
+              columnType: string
+              aggregation: false
+              displayName: 3-Way Match
+              shortDisplayName: ""
+            - id: attr-tbl-otd
+              pql: |
+                CASE
+                  WHEN "T1_PROCUREMENT_EVENTS"."KPI_ON_TIME_DELIVERY" = 1
+                  THEN 'On Time' ELSE 'Late'
+                END
+              columnType: string
+              aggregation: false
+              displayName: Delivery Status
+              shortDisplayName: ""
+          description: ""
+          displayName: Procurement Detail
+          shortDisplayName: ""
+grid:
+  mode: full-height
+  elements:
+    - id: elem-kpi-po-count-top
+      position:
+        width: 9
+        height: 13
+        positionX: 1
+        positionY: 1
+      componentId: kpi-card-po-count-c001
+    - id: elem-kpi-cycle-time-top
+      position:
+        width: 9
+        height: 13
+        positionX: 10
+        positionY: 1
+      componentId: kpi-card-cycle-time-c002
+    - id: elem-kpi-3wm-top
+      position:
+        width: 9
+        height: 13
+        positionX: 19
+        positionY: 1
+      componentId: kpi-card-3wm-c003
+    - id: elem-kpi-otd-top
+      position:
+        width: 9
+        height: 13
+        positionX: 28
+        positionY: 1
+      componentId: kpi-card-otd-c004
+    - id: elem-container-procurement
+      position:
+        width: 11
+        height: 57
+        positionX: 1
+        positionY: 14
+      container:
+        tabs:
+          - id: tab-container-a-01
+            name: Tab 1
+            filters: []
+            elements:
+              - id: elem-ca-textbox
+                position:
+                  width: 11
+                  height: 11
+                  positionX: 1
+                  positionY: 1
+                componentId: text-box-procurement-header
+              - id: elem-ca-kpi-value
+                position:
+                  width: 11
+                  height: 16
+                  positionX: 1
+                  positionY: 12
+                componentId: kpi-card-procurement-value-c005
+              - id: elem-ca-line-po-trend
+                position:
+                  width: 11
+                  height: 27
+                  positionX: 1
+                  positionY: 28
+                componentId: line-chart-po-trend-c006
+        background: white
+        displayName: Procurement Overview
+        tabsVisible: false
+    - id: elem-container-finance
+      position:
+        width: 13
+        height: 57
+        positionX: 12
+        positionY: 14
+      container:
+        tabs:
+          - id: tab-container-b-01
+            name: Tab 1
+            filters: []
+            elements:
+              - id: elem-cb-textbox
+                position:
+                  width: 12
+                  height: 12
+                  positionX: 1
+                  positionY: 1
+                componentId: text-box-finance-header
+              - id: elem-cb-kpi-days-to-pay
+                position:
+                  width: 6
+                  height: 14
+                  positionX: 1
+                  positionY: 13
+                componentId: kpi-card-days-to-pay-c007
+              - id: elem-cb-kpi-open-invoices
+                position:
+                  width: 6
+                  height: 14
+                  positionX: 7
+                  positionY: 13
+                componentId: kpi-card-open-invoices-c008
+              - id: elem-cb-pie-payment
+                position:
+                  width: 12
+                  height: 27
+                  positionX: 1
+                  positionY: 28
+                componentId: pie-chart-payment-method-c009
+        background: white
+        displayName: Finance & Invoice Overview
+        tabsVisible: false
+    - id: elem-container-vendor
+      position:
+        width: 12
+        height: 57
+        positionX: 25
+        positionY: 14
+      container:
+        tabs:
+          - id: tab-container-c-01
+            name: Tab 1
+            filters: []
+            elements:
+              - id: elem-cc-textbox
+                position:
+                  width: 12
+                  height: 11
+                  positionX: 1
+                  positionY: 1
+                componentId: text-box-vendor-header
+              - id: elem-cc-kpi-vendor-spend
+                position:
+                  width: 12
+                  height: 22
+                  positionX: 1
+                  positionY: 12
+                componentId: kpi-card-vendor-spend-c010
+              - id: elem-cc-line-otd-trend
+                position:
+                  width: 12
+                  height: 20
+                  positionX: 1
+                  positionY: 34
+                componentId: line-chart-otd-trend-c011
+        background: white
+        displayName: Vendor Performance
+        tabsVisible: false
