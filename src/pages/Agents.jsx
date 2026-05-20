@@ -231,10 +231,6 @@ function AgentsPage({ setSelectedAgent }) {
 
           {/* Header Title */}
           <div className="fc-page-title" style={{ marginBottom: 0 }}>
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Cpu color="var(--ofi-gold, #CCA23E)" size={24} />
-              AI Agents
-            </h1>
             <p style={{ color: 'var(--ofi-text-sec, #A0A0A0)', marginTop: '4px' }}>
               Interact directly with our intelligent, modular AI agents that automate every step of the Databricks to Celonis process migration.
             </p>

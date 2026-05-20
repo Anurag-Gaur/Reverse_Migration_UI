@@ -66,7 +66,7 @@ function TopHeader({ onSelectAgent }) {
                 className={`fc-nav__item ${activePage === 'agents' ? 'fc-nav__item--active' : ''}`}
                 onClick={() => navigate('/agents')}
               >
-                AI Agents
+                Automation Solutions
               </button>
 
 
@@ -136,9 +136,8 @@ function TopHeader({ onSelectAgent }) {
             <div className="fc-sidebar__item-icon">
               <Compass size={18} />
             </div>
-            <span>Agents Showroom</span>
+            <span>Automation Solutions</span>
           </button>
-
 
         </nav>
 
